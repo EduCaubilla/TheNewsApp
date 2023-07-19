@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SafariServices
 
 // TableView
 // Custom cell for each new in the list
@@ -13,21 +14,25 @@ import UIKit
 // Open the news story in a detail page
 // Search for News Stories
 
-class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
+class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, UISearchBarDelegate {
 
+    //TableView init
     private let tableView: UITableView = {
         let table = UITableView()
         table.register(NewsTableViewCell.self, forCellReuseIdentifier: NewsTableViewCell.identifier)
         return table
     }()
     
+    private let searchVC = UISearchController(searchResultsController: nil)
+    
+    private var articles = [Article]()
     private var viewModels = [NewsTableViewCellViewModel]()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        //TableView configuration
-        title = "The Tech News"
+        //TableView first config
+        title = "Technology News"
         view.backgroundColor = .systemBackground
         
         view.addSubview(tableView)
@@ -36,11 +41,26 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         
         tableView.separatorColor = UIColor.systemGray5
         
+        fetchNewsFeed()
+        createSearchBar()
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        tableView.frame = view.bounds
+    }
+    
+    private func createSearchBar(){
+        navigationItem.searchController = searchVC
+        searchVC.searchBar.delegate = self
+    }
+    
+    private func fetchNewsFeed(){
         //API call for data
         APICaller.shared.getTopStories { [weak self] result in
             switch result{
             case .success(let articles):
-                //print ("Ok -> \(response)")
+                self?.articles = articles
                 self?.viewModels = articles.compactMap({
                     NewsTableViewCellViewModel(title: $0.title,
                                                subtitle: $0.description ?? "No description available",
@@ -50,17 +70,12 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                     self?.tableView.reloadData()
                 }
             case .failure(let error):
-                print ("Not ok -> \(error)")
+                print ("There was an error calling the API -> \(error)")
             }
         }
     }
     
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        tableView.frame = view.bounds
-    }
-    
-    //Table
+    //TableView config
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return viewModels.count
@@ -79,11 +94,45 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at:indexPath, animated: true)
+        let article = articles[indexPath.row]
+        
+        guard let url = URL(string: article.url ?? "") else{
+            return
+        }
+        
+        let vc = SFSafariViewController(url: url)
+        present(vc, animated: true)
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 140
     }
     
+    // Search
+    
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        guard let text = searchBar.text, !text.isEmpty else{
+            return
+        }
+        
+        APICaller.shared.getSearchNews(with: text) { [weak self] result in
+        switch result{
+            case .success(let articles):
+                self?.articles = articles
+                self?.viewModels = articles.compactMap({
+                    NewsTableViewCellViewModel(title: $0.title,
+                                               subtitle: $0.description ?? "No description available",
+                                               imageURL: URL(string: $0.urlToImage ?? ""))
+                })
+                DispatchQueue.main.async {
+                    self?.title = "\(text) News"
+                    self?.tableView.reloadData()
+                    self?.searchVC.dismiss(animated: true, completion: nil)
+                }
+            case .failure(let error):
+                print ("There was an error calling the API -> \(error)")
+            }
+        }
+    }
 }
 

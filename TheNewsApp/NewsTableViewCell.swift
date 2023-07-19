@@ -45,6 +45,8 @@ class NewsTableViewCell: UITableViewCell {
         imageView.layer.borderWidth = 1
         imageView.layer.borderColor = UIColor.gray.cgColor
         imageView.contentMode = .scaleAspectFill
+        imageView.layer.cornerRadius = 6
+        imageView.layer.masksToBounds = true
         return imageView
     }()
     

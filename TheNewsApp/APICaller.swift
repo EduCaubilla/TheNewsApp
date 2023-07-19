@@ -13,7 +13,8 @@ final class APICaller{
     static let shared = APICaller()
     
     struct Constants {
-        static let topHeadlinesURL = URL(string: "https://newsapi.org/v2/everything?q=tech&apiKey=d01cca23bd74436e97f0f38a83dc79d1")
+        static let topHeadlinesURL = URL(string: "https://newsapi.org/v2/everything?q=technology&apiKey=d01cca23bd74436e97f0f38a83dc79d1")
+        static let searchUrlString = "https://newsapi.org/v2/everything?sortedBy=popularity&apiKey=d01cca23bd74436e97f0f38a83dc79d1&q="
     }
     
     private init(){}
@@ -30,8 +31,6 @@ final class APICaller{
             else if let data = data {
                 do{
                     let result = try JSONDecoder().decode(APIResponse.self, from: data)
-                
-                    print("Articles: \(result.articles.count)")
                     
                     completion(.success(result.articles))
                 }
@@ -41,6 +40,34 @@ final class APICaller{
             }
         })
         
+        task.resume()
+    }
+    
+    public func getSearchNews(with query: String, completion: @escaping (Result<[Article], Error>) -> Void){
+        guard !query.trimmingCharacters(in: .whitespaces).isEmpty else{
+            return
+        }
+        let urlString = Constants.searchUrlString + query
+        
+        guard let url = URL(string: urlString) else{
+            return
+        }
+        
+        let task = URLSession.shared.dataTask(with: url, completionHandler: {data, _, error in
+            if let error = error{
+                completion(.failure(error))
+            }
+            else if let data = data {
+                do{
+                    let result = try JSONDecoder().decode(APIResponse.self, from: data)
+                    
+                    completion(.success(result.articles))
+                }
+                catch{
+                    completion(.failure(error))
+                }
+            }
+        })
         task.resume()
     }
 }
