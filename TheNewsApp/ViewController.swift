@@ -8,12 +8,6 @@
 import UIKit
 import SafariServices
 
-// TableView
-// Custom cell for each new in the list
-// API Caller
-// Open the news story in a detail page
-// Search for News Stories
-
 class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, UISearchBarDelegate {
 
     //TableView init

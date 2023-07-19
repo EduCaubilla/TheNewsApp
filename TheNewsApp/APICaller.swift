@@ -14,7 +14,8 @@ final class APICaller{
     
     struct Constants {
         static let topHeadlinesURL = URL(string: "https://newsapi.org/v2/everything?q=technology&apiKey=d01cca23bd74436e97f0f38a83dc79d1")
-        static let searchUrlString = "https://newsapi.org/v2/everything?sortedBy=popularity&apiKey=d01cca23bd74436e97f0f38a83dc79d1&q="
+        static let searchUrlString = "https://newsapi.org/v2/everything?sortedBy=popularity"
+        static let API_KEY = "&apiKey=d01cca23bd74436e97f0f38a83dc79d1"
     }
     
     private init(){}
@@ -44,12 +45,15 @@ final class APICaller{
     }
     
     public func getSearchNews(with query: String, completion: @escaping (Result<[Article], Error>) -> Void){
-        guard !query.trimmingCharacters(in: .whitespaces).isEmpty else{
+        guard !query.isEmpty else{
             return
         }
-        let urlString = Constants.searchUrlString + query
+        let urlString = Constants.searchUrlString + "&q=\(query)" + Constants.API_KEY
         
-        guard let url = URL(string: urlString) else{
+        //Replace spaces with + to allow searching with more than one word
+        let urlPre = urlString.replacingOccurrences(of: " ", with: "+")
+        
+        guard let url = URL(string: urlPre) else{
             return
         }
         
