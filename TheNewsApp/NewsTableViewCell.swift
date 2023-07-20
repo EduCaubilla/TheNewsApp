@@ -10,15 +10,18 @@ import UIKit
 class NewsTableViewCellViewModel{
     let title: String
     let subtitle: String
+    let date: Date
     let imageURL: URL?
     var imageData: Data? = nil
 
     init(title: String,
         subtitle: String,
-        imageURL: URL?){
+        imageURL: URL?,
+        date: Date){
         self.title = title
         self.subtitle = subtitle
         self.imageURL = imageURL
+        self.date = date
     }
 }
 
@@ -29,6 +32,12 @@ class NewsTableViewCell: UITableViewCell {
     private let newsTitleLabel : UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize:18, weight:.regular)
+        return label
+    }()
+    
+    private let dateLabel : UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize:12, weight:.light)
         return label
     }()
     
@@ -53,6 +62,7 @@ class NewsTableViewCell: UITableViewCell {
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         contentView.addSubview(newsTitleLabel)
+        contentView.addSubview(dateLabel)
         contentView.addSubview(subtitleLabel)
         contentView.addSubview(newsImageView)
     }
@@ -70,8 +80,14 @@ class NewsTableViewCell: UITableViewCell {
                                       height: 65)
         newsTitleLabel.numberOfLines = 0
         
+        dateLabel.frame = CGRect(x: 10,
+                                 y: 74,
+                                 width: newsTitleLabel.frame.size.width,
+                                 height: 14)
+        dateLabel.numberOfLines = 0
+        
         subtitleLabel.frame = CGRect(x: 10,
-                                     y: 70,
+                                     y: 90,
                                      width: newsTitleLabel.frame.size.width,
                                      height: 65)
         subtitleLabel.numberOfLines = 0
@@ -85,13 +101,18 @@ class NewsTableViewCell: UITableViewCell {
     override func prepareForReuse() {
         super.prepareForReuse()
         newsTitleLabel.text = nil
+        dateLabel.text = nil
         subtitleLabel.text = nil
-        newsImageView.image = nil 
+        newsImageView.image = nil
     }
     
     func configure(with viewModel: NewsTableViewCellViewModel){
         newsTitleLabel.text = viewModel.title
         subtitleLabel.text = viewModel.subtitle
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "hh:mm a E, d MM Y"
+        dateLabel.text = formatter.string(from: viewModel.date) 
         
         //Image
         if let data = viewModel.imageData{

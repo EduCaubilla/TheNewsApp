@@ -33,7 +33,14 @@ final class APICaller{
                 do{
                     let result = try JSONDecoder().decode(APIResponse.self, from: data)
                     
-                    completion(.success(result.articles))
+                    //Order by date, latest first
+                    var sendResponse = result.articles
+                    sendResponse = sendResponse.sorted(by: {
+                        self.convertStringToDate(strDate: $0.publishedAt) >
+                        self.convertStringToDate(strDate: $1.publishedAt)
+                    })
+                    
+                    completion(.success(sendResponse))
                 }
                 catch{
                     completion(.failure(error))
@@ -65,7 +72,14 @@ final class APICaller{
                 do{
                     let result = try JSONDecoder().decode(APIResponse.self, from: data)
                     
-                    completion(.success(result.articles))
+                    //Order by date, latest first
+                    var sendResponse = result.articles
+                    sendResponse = sendResponse.sorted(by: {
+                        self.convertStringToDate(strDate: $0.publishedAt) >
+                        self.convertStringToDate(strDate: $1.publishedAt)
+                    })
+
+                    completion(.success(sendResponse))
                 }
                 catch{
                     completion(.failure(error))
@@ -73,6 +87,13 @@ final class APICaller{
             }
         })
         task.resume()
+    }
+    
+    public func convertStringToDate(strDate: String) -> Date{
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ" //"2023-07-18T08:00:48Z"
+        guard let dateObj = dateFormatter.date(from: strDate) else { return Date.distantPast}
+        return dateObj
     }
 }
 
@@ -87,7 +108,7 @@ struct APIResponse: Codable {
 struct Article: Codable {
     let source: Source
     let author: String?
-    let title: String
+    let title: String?
     let description: String?
     let url: String?
     let urlToImage: String?

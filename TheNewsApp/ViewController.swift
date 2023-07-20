@@ -55,11 +55,14 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
             switch result{
             case .success(let articles):
                 self?.articles = articles
+                
                 self?.viewModels = articles.compactMap({
-                    NewsTableViewCellViewModel(title: $0.title,
-                                               subtitle: $0.description ?? "No description available",
-                                               imageURL: URL(string: $0.urlToImage ?? ""))
+                    NewsTableViewCellViewModel(title: $0.title ?? "No title",
+                                               subtitle: $0.description ?? "No description",
+                                               imageURL: URL(string: $0.urlToImage ?? ""),
+                                               date: APICaller.shared.convertStringToDate(strDate: $0.publishedAt))
                 })
+                
                 DispatchQueue.main.async {
                     self?.tableView.reloadData()
                 }
@@ -99,7 +102,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 140
+        return 160
     }
     
     // Search
@@ -114,13 +117,17 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
             case .success(let articles):
                 self?.articles = articles
                 self?.viewModels = articles.compactMap({
-                    NewsTableViewCellViewModel(title: $0.title,
-                                               subtitle: $0.description ?? "No description available",
-                                               imageURL: URL(string: $0.urlToImage ?? ""))
+                    NewsTableViewCellViewModel(title: $0.title ?? "No title",
+                                               subtitle: $0.description ?? "No description",
+                                               imageURL: URL(string: $0.urlToImage ?? ""),
+                                               date: APICaller.shared.convertStringToDate(strDate: $0.publishedAt))
                 })
+
                 DispatchQueue.main.async {
                     self?.title = "\(text) News"
                     self?.tableView.reloadData()
+                    
+                    //Remove keyboard from view
                     self?.searchVC.dismiss(animated: true, completion: nil)
                 }
             case .failure(let error):
